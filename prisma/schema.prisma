@@ -1,0 +1,167 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+}
+
+enum BookingStatus {
+  CONFIRMED
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model SiteSettings {
+  id                 String   @id @default(cuid())
+  siteName           String   @default("The New Image Salon Studio Academy")
+  tagline            String   @default("Salon. Studio. Academy.")
+  aboutMarkdown      String   @default("")
+  addressLine        String   @default("LG-2,3, Gold Avenue apartment, 2A, Manik Bagh Rd, Nai Duniya, Palsikar Colony, Indore, Madhya Pradesh 452007")
+  phoneNumber        String   @default("075664 46000")
+  // Store as digits without '+' for wa.me; editable in admin panel.
+  whatsappNumber     String   @default("917566446000")
+  heroHeadline       String   @default("Luxury beauty, tailored to you")
+  heroSubheadline    String   @default("Premium salon services and academy training in Indore. Book instantly on WhatsApp.")
+  defaultMetaTitle   String   @default("The New Image Salon Studio Academy | Indore")
+  defaultMetaDesc    String   @default("Luxury salon services and academy training in Indore. Book on WhatsApp.")
+  logoPathLight      String   @default("")
+  logoPathDark       String   @default("")
+  lgbtFriendly       Boolean  @default(true)
+  onSiteServices     Boolean  @default(true)
+  acceptsCreditCards Boolean  @default(true)
+  acceptsDebitCards  Boolean  @default(true)
+  acceptsGooglePay   Boolean  @default(true)
+  acceptsNfcPayments Boolean  @default(true)
+  updatedAt          DateTime @updatedAt
+  createdAt          DateTime @default(now())
+}
+
+model ServiceCategory {
+  id        String    @id @default(cuid())
+  name      String
+  sortOrder Int       @default(0)
+  services  Service[]
+}
+
+model Service {
+  id           String          @id @default(cuid())
+  categoryId   String
+  category     ServiceCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  name         String
+  description  String          @default("")
+  priceFromInr Int?
+  durationMins Int?
+  featured     Boolean         @default(false)
+  active       Boolean         @default(true)
+  sortOrder    Int             @default(0)
+}
+
+model CourseCategory {
+  id        String   @id @default(cuid())
+  name      String
+  sortOrder Int      @default(0)
+  courses   Course[]
+}
+
+model Course {
+  id           String         @id @default(cuid())
+  categoryId   String
+  category     CourseCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  name         String
+  description  String         @default("")
+  durationText String         @default("")
+  feesText     String         @default("")
+  active       Boolean        @default(true)
+  featured     Boolean        @default(false)
+  sortOrder    Int            @default(0)
+}
+
+model ProductCategory {
+  id        String    @id @default(cuid())
+  name      String
+  sortOrder Int       @default(0)
+  products  Product[]
+}
+
+model Product {
+  id           String          @id @default(cuid())
+  categoryId   String
+  category     ProductCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  name         String
+  description  String          @default("")
+  priceInr     Int?
+  imagePath    String          @default("")
+  active       Boolean         @default(true)
+  featured     Boolean         @default(false)
+  sortOrder    Int             @default(0)
+}
+
+model Media {
+  id        String    @id @default(cuid())
+  type      MediaType
+  path      String
+  title     String    @default("")
+  alt       String    @default("")
+  tags      String    @default("") // comma-separated tags for quick filtering
+  featured  Boolean   @default(false)
+  sortOrder Int       @default(0)
+  createdAt DateTime  @default(now())
+}
+
+model Review {
+  id         String   @id @default(cuid())
+  authorName String
+  rating     Int      @default(5)
+  text       String
+  source     String   @default("Google")
+  reviewTime String   @default("")
+  createdAt  DateTime @default(now())
+  featured   Boolean  @default(false)
+  sortOrder  Int      @default(0)
+}
+
+model Booking {
+  id                 String        @id @default(cuid())
+  createdAt          DateTime      @default(now())
+  status             BookingStatus @default(CONFIRMED)
+  name               String
+  phone              String        @default("")
+  notes              String        @default("")
+  serviceName        String        @default("")
+  preferredDateText  String        @default("")
+  whatsappNumberUsed String
+  whatsappMessage    String
+  userAgent          String        @default("")
+}
+
+model Page {
+  id              String   @id @default(cuid())
+  slug            String   @unique
+  title           String
+  contentMarkdown String   @default("")
+  metaTitle       String   @default("")
+  metaDesc        String   @default("")
+  showInNav       Boolean  @default(false)
+  navOrder        Int      @default(0)
+  published       Boolean  @default(true)
+  updatedAt       DateTime @updatedAt
+  createdAt       DateTime @default(now())
+}
