@@ -1,6 +1,7 @@
 import postgres from "postgres";
 
 let _sql: ReturnType<typeof postgres> | null = null;
+let _schemaEnsured = false;
 
 export function sql() {
   if (_sql) return _sql;
@@ -16,13 +17,25 @@ export function sql() {
 }
 
 export async function ensureSchema() {
+  if (_schemaEnsured) return;
+  
   const db = sql();
-  await db/* sql */`
-    CREATE TABLE IF NOT EXISTS app_state (
-      id TEXT PRIMARY KEY,
-      data JSONB NOT NULL,
-      updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
-    );
-  `;
+  try {
+    await db/* sql */`
+      CREATE TABLE IF NOT EXISTS app_state (
+        id TEXT PRIMARY KEY,
+        data JSONB NOT NULL,
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+      );
+    `;
+    _schemaEnsured = true;
+  } catch (error) {
+    // If the table already exists, mark as ensured and continue
+    if ((error as any)?.message?.includes("already exists") || (error as any)?.code === "42P07") {
+      _schemaEnsured = true;
+    } else {
+      throw error;
+    }
+  }
 }
 
